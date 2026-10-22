@@ -1,6 +1,6 @@
 <div class="form-container">
   <div class="card shadow-2 border-round">
-    
+
     <!-- Encabezado -->
     <div class="form-header">
       <h2 class="m-0">Registro de Asistencia</h2>
@@ -8,20 +8,16 @@
     </div>
 
     <form [formGroup]="attendanceForm" (ngSubmit)="onSubmit()">
-      
+
       <!-- Fila 1: Nombre y Sucursal -->
       <div class="grid formgrid p-fluid">
         <!-- Nombre del Guardia -->
         <div class="field col-12 md:col-6">
           <label for="guardName" class="font-bold">Nombre del Guardia</label>
-          <input 
-            id="guardName" 
-            type="text" 
-            pInputText 
-            formControlName="guardName"
+          <input id="guardName" type="text" pInputText formControlName="guardName"
             placeholder="Ingrese nombre completo" />
-          <small *ngIf="attendanceForm.get('guardName')?.invalid && attendanceForm.get('guardName')?.touched" 
-                 class="p-error block mt-1">
+          <small *ngIf="attendanceForm.get('guardName')?.invalid && attendanceForm.get('guardName')?.touched"
+            class="p-error block mt-1">
             El nombre es requerido (mínimo 3 caracteres)
           </small>
         </div>
@@ -29,17 +25,11 @@
         <!-- Sucursal -->
         <div class="field col-12 md:col-6">
           <label for="branch" class="font-bold">Sucursal</label>
-          <p-dropdown 
-            id="branch"
-            [options]="branches" 
-            formControlName="branch"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Seleccione una sucursal"
-            [style]="{'width':'100%'}">
+          <p-dropdown id="branch" [options]="branches" formControlName="branch" optionLabel="label" optionValue="value"
+            placeholder="Seleccione una sucursal" [style]="{'width':'100%'}">
           </p-dropdown>
-          <small *ngIf="attendanceForm.get('branch')?.invalid && attendanceForm.get('branch')?.touched" 
-                 class="p-error block mt-1">
+          <small *ngIf="attendanceForm.get('branch')?.invalid && attendanceForm.get('branch')?.touched"
+            class="p-error block mt-1">
             Debe seleccionar una sucursal
           </small>
         </div>
@@ -50,16 +40,11 @@
         <!-- Fecha -->
         <div class="field col-12 md:col-6">
           <label for="date" class="font-bold">Fecha</label>
-          <p-calendar 
-            id="date"
-            formControlName="date"
-            dateFormat="dd/mm/yy"
-            placeholder="Seleccione fecha"
-            [style]="{'width':'100%'}"
-            [showIcon]="true">
+          <p-calendar id="date" formControlName="date" dateFormat="dd/mm/yy" placeholder="Seleccione fecha"
+            [style]="{'width':'100%'}" [showIcon]="true">
           </p-calendar>
-          <small *ngIf="attendanceForm.get('date')?.invalid && attendanceForm.get('date')?.touched" 
-                 class="p-error block mt-1">
+          <small *ngIf="attendanceForm.get('date')?.invalid && attendanceForm.get('date')?.touched"
+            class="p-error block mt-1">
             La fecha es requerida
           </small>
         </div>
@@ -67,51 +52,47 @@
         <!-- Hora -->
         <div class="field col-12 md:col-6">
           <label for="time" class="font-bold">Hora</label>
-          <p-calendar 
-            id="time"
-            formControlName="time"
-            [timeOnly]="true"
-            placeholder="Seleccione hora"
-            [style]="{'width':'100%'}"
-            [showIcon]="true">
+          <p-calendar id="time" formControlName="time" [timeOnly]="true" placeholder="Seleccione hora"
+            [style]="{'width':'100%'}" [showIcon]="true" [disabled]="attendanceForm.get('isRestDay')?.value">
           </p-calendar>
-          <small *ngIf="attendanceForm.get('time')?.invalid && attendanceForm.get('time')?.touched" 
-                 class="p-error block mt-1">
+          <small *ngIf="attendanceForm.get('time')?.invalid && attendanceForm.get('time')?.touched"
+            class="p-error block mt-1">
             La hora es requerida
           </small>
         </div>
       </div>
 
+      <!-- Interruptor de Descanso -->
+        <div class="field col-12 flex align-items-center mt-3">
+          <p-inputSwitch formControlName="isRestDay"></p-inputSwitch>
+          <label class="ml-3 font-bold" style="cursor: pointer;">
+            El guardia tiene descanso este día
+          </label>
+        </div>
+
       <!-- Fila 3: Imagen y Botón -->
       <div class="grid formgrid mt-3 align-items-center">
-        
+
         <!-- Carga de Imagen -->
         <div class="field col-12 md:col-8">
           <label class="font-bold block mb-2">Imagen de Registro</label>
-          <p-fileUpload 
-            mode="basic" 
-            chooseLabel="Seleccionar Imagen" 
-            chooseIcon="pi pi-camera"
-            accept="image/*" 
-            [maxFileSize]="1000000"
-            (onSelect)="onImageSelect($event)">
+          <p-fileUpload mode="basic" chooseLabel="Seleccionar Imagen" chooseIcon="pi pi-camera" accept="image/*"
+            [maxFileSize]="1000000" (onSelect)="onImageSelect($event) "  [disabled]="attendanceForm.get('isRestDay')?.value">
           </p-fileUpload>
-          
+
           <!-- Vista previa -->
           <div *ngIf="previewImage" class="mt-3 image-preview-container">
             <img [src]="previewImage" alt="Vista previa" class="preview-img shadow-1">
           </div>
         </div>
 
+
+        
+
         <!-- Botón de Envío -->
         <div class="field col-12 md:col-4 flex justify-content-end align-items-end h-full pb-3">
-          <button 
-            pButton 
-            type="submit" 
-            label="Registrar Asistencia" 
-            icon="pi pi-check"
-            class="w-full md:w-auto p-button-success"
-            [disabled]="attendanceForm.invalid">
+          <button pButton type="submit" label="Registrar Asistencia" icon="pi pi-check"
+            class="w-full md:w-auto p-button-success" [disabled]="attendanceForm.invalid">
           </button>
         </div>
       </div>

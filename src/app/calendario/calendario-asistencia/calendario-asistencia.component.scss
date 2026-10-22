@@ -1,0 +1,57 @@
+.card {
+  background: var(--surface-card);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+// Forzar a que el calendario sea más grande y visible
+::ng-deep .p-calendar {
+  width: 100%;
+  max-width: 800px;
+}
+
+::ng-deep .p-datepicker {
+  width: 100% !important;
+}
+
+::ng-deep .p-datepicker table td {
+  padding: 0.5rem !important; // Da más espacio entre días
+}
+
+::ng-deep .p-datepicker table td > span {
+  width: 3rem !important; // Hace las celdas más grandes
+  height: 3rem !important;
+  font-size: 1.1rem;
+}
+
+// Colores personalizados para los estados
+.dia-asistencia {
+  background-color: #22c55e !important; // Verde
+  color: white !important;
+  font-weight: bold;
+}
+
+.dia-descanso {
+  background-color: #f97316 !important; // Naranja
+  color: white !important;
+  font-weight: bold;
+}
+
+.dia-falta {
+  background-color: #ef4444 !important; // Rojo
+  color: white !important;
+  font-weight: bold;
+}
+
+// Estilos para la leyenda de abajo
+.leyenda-color {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+
+.bg-green-500 { background-color: #22c55e; }
+.bg-orange-500 { background-color: #f97316; }
+.bg-red-500 { background-color: #ef4444; }

@@ -6,6 +6,7 @@ import { provideHttpClient } from '@angular/common/http'; //
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { AttendanceModule } from './attendance/attendance.module';
+import { CalendarioModule } from './calendario/calendario.module'; 
 
 @NgModule({
   declarations: [
@@ -15,7 +16,8 @@ import { AttendanceModule } from './attendance/attendance.module';
     BrowserModule,
     BrowserAnimationsModule,
     AppRoutingModule,
-    AttendanceModule
+    AttendanceModule,
+    CalendarioModule
   ],
   providers: [
      provideHttpClient()

@@ -1,0 +1,58 @@
+<div class="card">
+  <div class="flex flex-column md:flex-row justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="m-0">Calendario de Asistencias</h2>
+      <p class="text-500 mt-2 mb-0">Selecciona una sucursal para ver el estado de los guardias.</p>
+    </div>
+
+    <!-- Selector de Sucursal -->
+    <div class="field mt-3 md:mt-0">
+      <p-dropdown 
+        id="sucursal"
+        [options]="sucursales" 
+        optionLabel="label" 
+        optionValue="value"
+        placeholder="Seleccione sucursal"
+        (onChange)="onSucursalChange($event)"
+        [style]="{'width':'100%', 'min-width': '250px'}">
+      </p-dropdown>
+    </div>
+  </div>
+
+  <!-- Contenedor del calendario -->
+  <div class="calendario-container flex justify-content-center">
+    <p-calendar 
+      [inline]="true" 
+      [showOtherMonths]="false"
+      (onMonthChange)="cargarAsistenciasDelMes()"
+      styleClass="w-full md:w-auto">
+      
+      <!-- Plantilla personalizada para cada día -->
+      <ng-template pTemplate="date" let-date>
+        <span 
+          [class.dia-asistencia]="getEstadoDia(date) === 'asistencia'"
+          [class.dia-descanso]="getEstadoDia(date) === 'descanso'"
+          [class.dia-falta]="getEstadoDia(date) === 'sin-registro' && sucursalSeleccionada"
+          style="display: inline-flex; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; cursor: pointer;">
+          {{date.day}}
+        </span>
+      </ng-template>
+    </p-calendar>
+  </div>
+</div>
+
+<!-- Leyenda de colores -->
+<div class="flex justify-content-center gap-4 mt-4" *ngIf="sucursalSeleccionada">
+  <div class="flex align-items-center gap-2">
+    <span class="leyenda-color bg-green-500"></span>
+    <span class="text-sm">Asistencia</span>
+  </div>
+  <div class="flex align-items-center gap-2">
+    <span class="leyenda-color bg-orange-500"></span>
+    <span class="text-sm">Descanso</span>
+  </div>
+  <div class="flex align-items-center gap-2">
+    <span class="leyenda-color bg-red-500"></span>
+    <span class="text-sm">Falta (sin registro)</span>
+  </div>
+</div>

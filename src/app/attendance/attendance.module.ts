@@ -10,7 +10,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { CalendarModule } from 'primeng/calendar';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
-
+import { InputSwitchModule } from 'primeng/inputswitch'; 
 
 @NgModule({
   declarations: [
@@ -23,6 +23,7 @@ import { ButtonModule } from 'primeng/button';
     DropdownModule,
     CalendarModule,
     InputTextModule,
+    InputSwitchModule,
     ButtonModule
   ],
   exports: [
