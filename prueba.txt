@@ -1,0 +1,101 @@
+<!-- attendance-form.component.html -->
+<div class="card">
+  <h2>Registro de Asistencia</h2>
+  
+  <form [formGroup]="attendanceForm" (ngSubmit)="onSubmit()">
+    
+    <!-- Nombre del Guardia -->
+    <div class="field">
+      <label for="guardName">Nombre del Guardia</label>
+      <input 
+        id="guardName" 
+        type="text" 
+        pInputText 
+        formControlName="guardName"
+        placeholder="Ingrese nombre completo"
+        class="w-full" />
+      <small *ngIf="attendanceForm.get('guardName')?.invalid && attendanceForm.get('guardName')?.touched" 
+             class="p-error">
+        El nombre es requerido (mínimo 3 caracteres)
+      </small>
+    </div>
+
+    <!-- Sucursal (Combo Box) -->
+    <div class="field">
+      <label for="branch">Sucursal</label>
+      <p-dropdown 
+        id="branch"
+        [options]="branches" 
+        formControlName="branch"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccione una sucursal"
+        styleClass="w-full">
+      </p-dropdown>
+      <small *ngIf="attendanceForm.get('branch')?.invalid && attendanceForm.get('branch')?.touched" 
+             class="p-error">
+        Debe seleccionar una sucursal
+      </small>
+    </div>
+
+    <!-- Fecha -->
+    <div class="field">
+      <label for="date">Fecha</label>
+      <p-calendar 
+        id="date"
+        formControlName="date"
+        dateFormat="dd/mm/yy"
+        placeholder="Seleccione fecha"
+        styleClass="w-full">
+      </p-calendar>
+      <small *ngIf="attendanceForm.get('date')?.invalid && attendanceForm.get('date')?.touched" 
+             class="p-error">
+        La fecha es requerida
+      </small>
+    </div>
+
+    <!-- Hora -->
+    <div class="field">
+      <label for="time">Hora</label>
+      <p-calendar 
+        id="time"
+        formControlName="time"
+        [timeOnly]="true"
+        placeholder="Seleccione hora"
+        styleClass="w-full">
+      </p-calendar>
+      <small *ngIf="attendanceForm.get('time')?.invalid && attendanceForm.get('time')?.touched" 
+             class="p-error">
+        La hora es requerida
+      </small>
+    </div>
+
+    <!-- Carga de Imagen -->
+    <div class="field">
+      <label>Imagen de Registro</label>
+    <p-fileUpload 
+  mode="basic" 
+  chooseLabel="Seleccionar Imagen" 
+  chooseIcon="pi pi-upload"
+  accept="image/*" 
+  [maxFileSize]="1000000"
+  (onSelect)="onImageSelect($event)">
+</p-fileUpload>
+      
+      <!-- Vista previa -->
+      <div *ngIf="previewImage" class="mt-3">
+        <img [src]="previewImage" alt="Vista previa" style="max-width: 200px; border-radius: 8px;">
+      </div>
+    </div>
+
+    <!-- Botón de Envío -->
+    <button 
+      pButton 
+      type="submit" 
+      label="Registrar Asistencia" 
+      icon="pi pi-check"
+      [disabled]="attendanceForm.invalid">
+    </button>
+    
+  </form>
+</div>
