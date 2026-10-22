@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AttendanceService } from 'src/app/services/attendance.service';
 import { SucursalService } from 'src/app/services/sucursal.service';
@@ -6,24 +6,20 @@ import { SucursalService } from 'src/app/services/sucursal.service';
 @Component({
   selector: 'app-attendance-form',
   templateUrl: './attendance-form.component.html',
-  styleUrls: ['./attendance-form.component.scss']
+  styleUrls: ['./attendance-form.component.scss'],
 })
 export class AttendanceFormComponent implements OnInit {
+  @ViewChild('fileUpload') fileUpload: any;
   attendanceForm!: FormGroup;
-
-  // Lista de sucursales (ejemplo)
-  // branches = [
-  //   { label: 'Sucursal Centro', value: 'CENTRO' },
-  //   { label: 'Sucursal Norte', value: 'NORTE' },
-  //   { label: 'Sucursal Sur', value: 'SUR' }
-  // ];
   branches: any[] = [];
-
-  // Para mostrar la vista previa de la imagen
   previewImage: string | ArrayBuffer | null = null;
+  archivoSeleccionado: File | null = null;
 
-  constructor(private fb: FormBuilder, private sucursalService: SucursalService, private attendanceService: AttendanceService) { }
-
+  constructor(
+    private fb: FormBuilder,
+    private sucursalService: SucursalService,
+    private attendanceService: AttendanceService,
+  ) {}
 
   ngOnInit(): void {
     this.attendanceForm = this.fb.group({
@@ -32,8 +28,41 @@ export class AttendanceFormComponent implements OnInit {
       date: [null, Validators.required],
       time: [null, Validators.required],
       isRestDay: [false],
-      image: [null] // Aquí guardaremos el archivo si es necesario
+      isAbsence: [false],
     });
+
+    // Lógica para que sean excluyentes y habilitar/deshabilitar la hora
+    this.attendanceForm.get('isRestDay')?.valueChanges.subscribe((isRest) => {
+      const timeControl = this.attendanceForm.get('time');
+      const absenceControl = this.attendanceForm.get('isAbsence');
+
+      if (isRest) {
+        absenceControl?.setValue(false);
+        timeControl?.clearValidators();
+        timeControl?.disable();
+      } else if (!this.attendanceForm.get('isAbsence')?.value) {
+        timeControl?.setValidators(Validators.required);
+        timeControl?.enable();
+      }
+      timeControl?.updateValueAndValidity();
+    });
+
+    this.attendanceForm
+      .get('isAbsence')
+      ?.valueChanges.subscribe((isAbsence) => {
+        const timeControl = this.attendanceForm.get('time');
+        const restControl = this.attendanceForm.get('isRestDay');
+
+        if (isAbsence) {
+          restControl?.setValue(false);
+          timeControl?.clearValidators();
+          timeControl?.disable();
+        } else if (!this.attendanceForm.get('isRestDay')?.value) {
+          timeControl?.setValidators(Validators.required);
+          timeControl?.enable();
+        }
+        timeControl?.updateValueAndValidity();
+      });
 
     this.cargarSucursales();
   }
@@ -41,15 +70,14 @@ export class AttendanceFormComponent implements OnInit {
   cargarSucursales() {
     this.sucursalService.getSucursalesActivas().subscribe({
       next: (data: any) => {
-        // Mapeamos el JSON de .NET a lo que espera el p-dropdown de PrimeNG
-        this.branches = data.map((sucursal: { nombre: any; }) => ({
+        this.branches = data.map((sucursal: { nombre: any }) => ({
           label: sucursal.nombre,
-          value: sucursal.nombre // Puedes usar sucursal.id si quieres guardar el ID
+          value: sucursal.nombre,
         }));
       },
       error: (err: any) => {
         console.error('Error al cargar sucursales:', err);
-      }
+      },
     });
   }
 
@@ -57,11 +85,11 @@ export class AttendanceFormComponent implements OnInit {
   onImageSelect(event: any) {
     if (event.files && event.files.length > 0) {
       const file = event.files[0];
-      this.attendanceForm.patchValue({ image: file });
+      this.archivoSeleccionado = file;
 
       // Crear vista previa
       const reader = new FileReader();
-      reader.onload = (e) => this.previewImage = e.target?.result as string;
+      reader.onload = (e) => (this.previewImage = e.target?.result as string);
       reader.readAsDataURL(file);
     }
   }
@@ -69,38 +97,75 @@ export class AttendanceFormComponent implements OnInit {
   // Enviar formulario
   onSubmit() {
     if (this.attendanceForm.valid) {
-      // Obtenemos los valores. getRawValue() incluye los campos deshabilitados (como la hora si es descanso)
       const formData = this.attendanceForm.getRawValue();
 
-      // Formatear la fecha y hora para que .NET las entienda perfectamente
-      const payload = {
-        guardName: formData.guardName,
-        branch: formData.branch,
-        date: formData.date ? new Date(formData.date).toISOString() : null,
-        time: formData.time ? new Date(formData.time).toTimeString().split(' ')[0] : '00:00:00',
-        isRestDay: formData.isRestDay,
-        imageUrl: null // Si luego implementas subida de imagen, aquí iría la URL
-      };
-
-      this.attendanceService.registrarAsistencia(payload).subscribe({
-        next: (res) => {
-          alert('¡Asistencia registrada con éxito!');
-          this.attendanceForm.reset({ isRestDay: false }); // Limpiar formulario
-          this.previewImage = null;
-        },
-        error: (err) => {
-          console.error('Error al guardar:', err);
-          // Muestra el mensaje de error de la API si existe
-          const errorMsg = err.error?.message || 'Ocurrió un error al guardar';
-          alert(errorMsg);
-        }
-      });
+      // 1. Si hay una imagen seleccionada, la subimos primero
+      if (this.archivoSeleccionado) {
+        this.attendanceService.subirImagen(this.archivoSeleccionado).subscribe({
+          next: (res) => {
+            // Cuando la imagen se sube, obtenemos la URL y guardamos la asistencia
+            this.guardarAsistencia(formData, res.imageUrl);
+          },
+          error: (err) => {
+            console.error('Error al subir la imagen', err);
+            alert('Error al subir la imagen. Intente de nuevo.');
+          },
+        });
+      } else {
+        // 2. Si no hay imagen, guardamos directo con null
+        this.guardarAsistencia(formData, null);
+      }
     } else {
       // Marcar todos los campos como tocados para mostrar errores
-      Object.keys(this.attendanceForm.controls).forEach(key => {
+      Object.keys(this.attendanceForm.controls).forEach((key) => {
         this.attendanceForm.get(key)?.markAsTouched();
       });
     }
   }
 
+  // Método separado para guardar la asistencia (recibe la URL de la imagen ya subida)
+  guardarAsistencia(formData: any, imageUrl: string | null) {
+    const payload = {
+      guardName: formData.guardName,
+      branch: formData.branch,
+      date: formData.date ? new Date(formData.date).toISOString() : null,
+      time: formData.time
+        ? new Date(formData.time).toTimeString().split(' ')[0]
+        : '00:00:00',
+      isRestDay: formData.isRestDay,
+      isAbsence: formData.isAbsence,
+      imageUrl: imageUrl, // 👈 Aquí ya va la URL real
+    };
+
+    this.attendanceService.registrarAsistencia(payload).subscribe({
+      next: (res) => {
+        alert('¡Asistencia registrada con éxito!');
+        // Limpiar formulario y variables
+        this.attendanceForm.reset({ isRestDay: false, isAbsence: false });
+        this.previewImage = null;
+        this.archivoSeleccionado = null;
+        if (this.fileUpload) {
+          this.fileUpload.clear();
+        }
+        // Habilitar el campo de hora de nuevo por si se había deshabilitado
+        this.attendanceForm.get('time')?.enable();
+      },
+      error: (err) => {
+        console.error('Error al guardar:', err);
+        const errorMsg = err.error?.message || 'Ocurrió un error al guardar';
+        alert(errorMsg);
+      },
+    });
+
+    
+  }
+
+  eliminarFoto() {
+  this.previewImage = null;
+  this.archivoSeleccionado = null;
+  
+  // Limpiar el componente visual de PrimeNG
+  if (this.fileUpload) {
+    this.fileUpload.clear();
+  }}
 }

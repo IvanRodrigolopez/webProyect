@@ -1,40 +1,65 @@
 <div class="card">
+  <!-- Encabezado y Selector de Sucursal -->
   <div class="flex flex-column md:flex-row justify-content-between align-items-center mb-4">
     <div>
       <h2 class="m-0">Calendario de Asistencias</h2>
-      <p class="text-500 mt-2 mb-0">Selecciona una sucursal para ver el estado de los guardias.</p>
+      <p class="text-500 mt-2 mb-0">
+        Selecciona una sucursal para ver el estado de los guardias.
+      </p>
     </div>
 
-    <!-- Selector de Sucursal -->
-    <div class="field mt-3 md:mt-0">
-      <p-dropdown 
-        id="sucursal"
-        [options]="sucursales" 
-        optionLabel="label" 
-        optionValue="value"
-        placeholder="Seleccione sucursal"
-        (onChange)="onSucursalChange($event)"
-        [style]="{'width':'100%', 'min-width': '250px'}">
-      </p-dropdown>
+    <div class="flex align-items-center gap-3 mt-3 md:mt-0">
+      <!-- Botón de Reporte -->
+      <button
+        pButton
+        type="button"
+        label="Reporte Excel"
+        icon="pi pi-file-excel"
+        class="p-button-success p-button-outlined"
+        (click)="descargarReporte()"
+      ></button>
+
+      <!-- Selector de Sucursal -->
+      <div class="field m-0">
+        <p-dropdown
+          id="sucursal"
+          [options]="sucursales"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccione sucursal"
+          (onChange)="onSucursalChange($event)"
+          [style]="{ width: '100%', 'min-width': '250px' }"
+        >
+        </p-dropdown>
+      </div>
     </div>
   </div>
 
   <!-- Contenedor del calendario -->
   <div class="calendario-container flex justify-content-center">
-    <p-calendar 
-      [inline]="true" 
-      [showOtherMonths]="false"
+    <p-calendar
+      [inline]="true"
       (onMonthChange)="cargarAsistenciasDelMes()"
-      styleClass="w-full md:w-auto">
-      
+      styleClass="w-full md:w-auto"
+      (onSelect)="onDiaSeleccionado($event)"
+    >
       <!-- Plantilla personalizada para cada día -->
       <ng-template pTemplate="date" let-date>
-        <span 
+        <span
           [class.dia-asistencia]="getEstadoDia(date) === 'asistencia'"
           [class.dia-descanso]="getEstadoDia(date) === 'descanso'"
           [class.dia-falta]="getEstadoDia(date) === 'sin-registro' && sucursalSeleccionada"
-          style="display: inline-flex; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; cursor: pointer;">
-          {{date.day}}
+          style="
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            cursor: pointer;
+          "
+        >
+          {{ date.day }}
         </span>
       </ng-template>
     </p-calendar>
@@ -56,3 +81,102 @@
     <span class="text-sm">Falta (sin registro)</span>
   </div>
 </div>
+
+<!-- 👇 MODAL 1: DETALLE DEL REGISTRO (Compacto y Centrado) -->
+<p-dialog
+  header="Detalle del Registro"
+  [(visible)]="mostrarDialogo"
+  [modal]="true"
+  [style]="{ width: '450px', maxWidth: '90vw' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div *ngIf="registroSeleccionado" class="flex flex-column gap-3">
+    <!-- Nombre -->
+    <div>
+      <span class="font-bold text-600 block mb-1">Nombre del Guardia:</span>
+      <span class="text-xl">{{ registroSeleccionado.guardName }}</span>
+    </div>
+
+    <!-- Hora (solo si no es falta ni descanso) -->
+    <div *ngIf="!registroSeleccionado.isAbsence && !registroSeleccionado.isRestDay">
+      <span class="font-bold text-600 block mb-1">Hora de Entrada:</span>
+      <span class="text-xl">{{ registroSeleccionado.time || "N/A" }}</span>
+    </div>
+
+    <!-- Estado -->
+    <div>
+      <span class="font-bold text-600 block mb-1">Estado:</span>
+      <p-tag
+        [severity]="registroSeleccionado.isAbsence ? 'danger' : (registroSeleccionado.isRestDay ? 'warning' : 'success')"
+        [value]="registroSeleccionado.isAbsence ? 'Falta' : (registroSeleccionado.isRestDay ? 'Descanso' : 'Asistencia')"
+      ></p-tag>
+    </div>
+
+    <!-- Imagen -->
+    <div class="mt-2">
+      <span class="font-bold text-600 block mb-2">Fotografía:</span>
+      
+      <div *ngIf="registroSeleccionado.imageUrl; else noImage" class="flex flex-column align-items-center">
+        
+        <!-- Contenedor gris centrado para la imagen -->
+        <div class="w-full bg-gray-100 border-round p-2 flex justify-content-center align-items-center" style="min-height: 200px;">
+          <img
+            [src]="'http://localhost:5108' + registroSeleccionado.imageUrl"
+            alt="Foto del guardia"
+            class="border-round shadow-2 cursor-pointer transition-all hover:shadow-4"
+            style="max-height: 200px; max-width: 100%; object-fit: contain;"
+            (click)="mostrarImagenExpandida = true"
+          />
+        </div>
+        
+        <small class="text-500 mt-2 font-italic">
+          <i class="pi pi-search-plus mr-1"></i> Clic en la imagen para ampliar
+        </small>
+      </div>
+
+      <ng-template #noImage>
+        <div class="p-4 text-center bg-gray-100 border-round text-600">
+          <i class="pi pi-image text-4xl mb-2 text-gray-400"></i>
+          <p class="m-0">No hay imagen registrada</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- 👇 MODAL 2: IMAGEN EXPANDIDA (Fondo oscuro y botón de cerrar) -->
+<p-dialog
+  [(visible)]="mostrarImagenExpandida"
+  [modal]="true"
+  [showHeader]="false"
+  [style]="{
+    width: '90vw',
+    maxWidth: '800px',
+    backgroundColor: 'transparent',
+    border: 'none',
+    boxShadow: 'none'
+  }"
+  [dismissableMask]="true"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="relative flex justify-content-center">
+    <!-- Botón para cerrar (X) -->
+    <button
+      pButton
+      type="button"
+      icon="pi pi-times"
+      class="p-button-rounded p-button-danger p-button-text absolute close-btn"
+      (click)="mostrarImagenExpandida = false"
+    ></button>
+
+    <img
+      *ngIf="registroSeleccionado?.imageUrl"
+      [src]="'http://localhost:5108' + registroSeleccionado.imageUrl"
+      alt="Foto expandida"
+      class="w-full border-round shadow-8"
+      style="max-height: 85vh; object-fit: contain"
+    />
+  </div>
+</p-dialog>

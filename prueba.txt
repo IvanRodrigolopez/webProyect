@@ -99,3 +99,197 @@
     
   </form>
 </div>
+
+
+
+
+<p-dialog
+  header="Detalle del Registro"
+  [(visible)]="mostrarDialogo"
+  [modal]="true"
+  [style]="{width: '600px', maxWidth: '90vw'}" 
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div *ngIf="registroSeleccionado" class="flex flex-column gap-3">
+    <!-- Nombre -->
+    <div>
+      <span class="font-bold text-600 block mb-1">Nombre del Guardia: </span>
+      <span class="text-xl">{{ registroSeleccionado.guardName }}</span>
+    </div>
+
+    <!-- Hora -->
+    <div>
+      <span class="font-bold text-600 block mb-1">Hora de Entrada: </span>
+      <span class="text-xl">
+        <!-- Formateamos la hora de "08:30:00" a "08:30 AM/PM" si quieres, o la dejamos tal cual -->
+        {{ registroSeleccionado.time || "N/A" }}
+      </span>
+    </div>
+
+    <!-- Imagen -->
+    <div>
+      <span class="font-bold text-600 block mb-1">Fotografía</span>
+      <!-- Verificamos si hay imagen -->
+      <img
+        *ngIf="registroSeleccionado.imageUrl; else noImage"
+        [src]="'http://localhost:5108' + registroSeleccionado.imageUrl"
+        alt="Foto del guardia"
+        class="w-full border-round shadow-2"
+        style="max-height: 250px; object-fit: cover"
+      />
+
+      <ng-template #noImage>
+        <div class="p-3 text-center bg-gray-100 border-round text-600">
+          <i class="pi pi-image text-4xl mb-2"></i>
+          <p class="m-0">No hay imagen registrada</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</p-dialog>
+
+
+
+
+<div class="card">
+  <div
+    class="flex flex-column md:flex-row justify-content-between align-items-center mb-4"
+  >
+    <div>
+      <h2 class="m-0">Calendario de Asistencias</h2>
+      <p class="text-500 mt-2 mb-0">
+        Selecciona una sucursal para ver el estado de los guardias.
+      </p>
+    </div>
+
+    <!-- Selector de Sucursal -->
+    <div class="field mt-3 md:mt-0">
+      <p-dropdown
+        id="sucursal"
+        [options]="sucursales"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccione sucursal"
+        (onChange)="onSucursalChange($event)"
+        [style]="{ width: '100%', 'min-width': '250px' }"
+      >
+      </p-dropdown>
+    </div>
+  </div>
+
+  <div class="flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="m-0">Calendario de Asistencias</h2>
+    </div>
+
+    <!-- Botón de Reporte -->
+    <button
+      pButton
+      type="button"
+      label="Descargar Reporte Excel"
+      icon="pi pi-file-excel"
+      class="p-button-success"
+      (click)="descargarReporte()"
+    ></button>
+  </div>
+
+  <!-- Contenedor del calendario -->
+  <div class="calendario-container flex justify-content-center">
+    <p-calendar
+      [inline]="true"
+      [showOtherMonths]="false"
+      (onMonthChange)="cargarAsistenciasDelMes()"
+      styleClass="w-full md:w-auto"
+      (onSelect)="onDiaSeleccionado($event)"
+    >
+      <!-- Plantilla personalizada para cada día -->
+      <ng-template pTemplate="date" let-date>
+        <span
+          [class.dia-asistencia]="getEstadoDia(date) === 'asistencia'"
+          [class.dia-descanso]="getEstadoDia(date) === 'descanso'"
+          [class.dia-falta]="
+            getEstadoDia(date) === 'sin-registro' && sucursalSeleccionada
+          "
+          style="
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            cursor: pointer;
+          "
+        >
+          {{ date.day }}
+        </span>
+      </ng-template>
+    </p-calendar>
+  </div>
+</div>
+
+<!-- Leyenda de colores -->
+<div
+  class="flex justify-content-center gap-4 mt-4"
+  *ngIf="sucursalSeleccionada"
+>
+  <div class="flex align-items-center gap-2">
+    <span class="leyenda-color bg-green-500"></span>
+    <span class="text-sm">Asistencia</span>
+  </div>
+  <div class="flex align-items-center gap-2">
+    <span class="leyenda-color bg-orange-500"></span>
+    <span class="text-sm">Descanso</span>
+  </div>
+  <div class="flex align-items-center gap-2">
+    <span class="leyenda-color bg-red-500"></span>
+    <span class="text-sm">Falta (sin registro)</span>
+  </div>
+</div>
+
+<p-dialog
+  header="Detalle del Registro"
+  [(visible)]="mostrarDialogo"
+  [modal]="true"
+  [style]="{width: '600px', maxWidth: '90vw'}" 
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div *ngIf="registroSeleccionado" class="flex flex-column gap-3">
+    <!-- Nombre -->
+    <div>
+      <span class="font-bold text-600 block mb-1">Nombre del Guardia: </span>
+      <span class="text-xl">{{ registroSeleccionado.guardName }}</span>
+    </div>
+
+    <!-- Hora -->
+    <div>
+      <span class="font-bold text-600 block mb-1">Hora de Entrada: </span>
+      <span class="text-xl">
+        <!-- Formateamos la hora de "08:30:00" a "08:30 AM/PM" si quieres, o la dejamos tal cual -->
+        {{ registroSeleccionado.time || "N/A" }}
+      </span>
+    </div>
+
+    <!-- Imagen -->
+    <div>
+      <span class="font-bold text-600 block mb-1">Fotografía</span>
+      <!-- Verificamos si hay imagen -->
+      <img
+        *ngIf="registroSeleccionado.imageUrl; else noImage"
+        [src]="'http://localhost:5108' + registroSeleccionado.imageUrl"
+        alt="Foto del guardia"
+        class="w-full border-round shadow-2"
+        style="max-height: 250px; object-fit: cover"
+      />
+
+      <ng-template #noImage>
+        <div class="p-3 text-center bg-gray-100 border-round text-600">
+          <i class="pi pi-image text-4xl mb-2"></i>
+          <p class="m-0">No hay imagen registrada</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</p-dialog>
+
